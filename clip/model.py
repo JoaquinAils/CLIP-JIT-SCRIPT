@@ -159,7 +159,9 @@ class LayerNorm(nn.LayerNorm):
 
     def forward(self, x: torch.Tensor):
         orig_type = x.dtype
-        ret = super().forward(x.type(torch.float32))
+        # ret = super().forward(x.type(torch.float32))
+        ret = F.layer_norm(
+            x.type(torch.float32), self.normalized_shape, self.weight, self.bias, self.eps)
         return ret.type(orig_type)
 
 
@@ -360,8 +362,8 @@ class CLIP(nn.Module):
         text_features = self.encode_text(text)
 
         # normalized features
-        image_features = image_features / image_features.norm(dim=1, keepdim=True)
-        text_features = text_features / text_features.norm(dim=1, keepdim=True)
+        image_features = image_features / image_features.norm(p=2,dim=1, keepdim=True)
+        text_features = text_features / text_features.norm(p=2,dim=1, keepdim=True)
 
         # cosine similarity as logits
         logit_scale = self.logit_scale.exp()
